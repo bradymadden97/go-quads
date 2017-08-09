@@ -1,4 +1,10 @@
 // Main.go
+
+/*
+** Using quadtree to keep track of order of images to piece back together recursively
+** Using minheap to quickly push new subimages and pop highest-error image
+ */
+
 package main
 
 import (
@@ -12,21 +18,19 @@ import (
 )
 
 type Img struct {
-	img   *image.NRGBA
-	error float64
+	img   *image.NRGBA //Pointer to image
+	color []float64    //Average color stored as [R, G, B]
+	error float64      //Calculated error between average pixels and image
+	c1    *Img         //Pointer to child 1
+	c2    *Img         //Pointer to child 2
+	c3    *Img         //Pointer to child 3
+	c4    *Img         //Pointer to child 4
 }
 
 type MinHeap []*Img
 
-type ImgNode struct {
-	node *Img
-	c1   *ImgNode
-	c2   *ImgNode
-	c3   *ImgNode
-	c4   *ImgNode
-}
-
 func main() {
+	//Get input image and convert to NRGBA
 	input_img, err := imaging.Open("tiger.jpg")
 	if err != nil {
 		log.Fatalf("Open image failed: %v", err)
@@ -36,18 +40,30 @@ func main() {
 		log.Fatalf("Image error: %v", err)
 	}
 
-	i := Img{
+	//Create Img object, get initial error, start Quadtree
+	headNode := Img{
 		img: img,
 	}
-	analyzeImage(&i)
+	analyzeImage(&headNode)
 
+	//Begin minheap
 	mh := make(MinHeap, 1)
-	mh[0] = &i
+	mh[0] = &headNode
 	heap.Init(&mh)
 
-	for mh.Len() > 0 {
-		i := heap.Pop(&mh).(*Img)
-		fmt.Printf("%v", i.error)
+	//Loop
+	iterations := 5
+	for i := 0; i < iterations; i++ {
+		a := mh.Pop().(*Img)
+		c := splitImage(a.img)
+
+		a.img = nil
+		a.c1, a.c2, a.c3, a.c4 = c[0], c[1], c[2], c[3]
+
+		heap.Push(&mh, a.c1)
+		heap.Push(&mh, a.c2)
+		heap.Push(&mh, a.c3)
+		heap.Push(&mh, a.c4)
 	}
 }
 
@@ -79,12 +95,13 @@ func analyzeImage(i *Img) {
 	img := i.img
 	hist, pix := histogram(img)
 	avg := averageRGB(hist, pix)
+	i.color = avg
 	i.error = calculateError(hist, avg)
 	return
 }
 
 // splitImage splits the input image into 4 equal images by width and height
-func splitImage(img *image.NRGBA) []*image.NRGBA {
+func splitImage(img *image.NRGBA) []*Img {
 	img_min_x, img_max_x := img.Bounds().Min.X, img.Bounds().Max.X
 	img_min_y, img_max_y := img.Bounds().Min.Y, img.Bounds().Max.Y
 	img_width, img_height := img_max_x-img_min_x, img_max_y-img_min_y
@@ -94,9 +111,22 @@ func splitImage(img *image.NRGBA) []*image.NRGBA {
 	r3 := image.Rect(img_min_x, img_height/2, img_width/2, img_max_y)
 	r4 := image.Rect(img_width/2, img_height/2, img_max_x, img_max_y)
 
-	s1, s2, s3, s4 := img.SubImage(r1), img.SubImage(r2), img.SubImage(r3), img.SubImage(r4)
+	l := []*image.NRGBA{
+		imaging.Clone(img.SubImage(r1)),
+		imaging.Clone(img.SubImage(r2)),
+		imaging.Clone(img.SubImage(r3)),
+		imaging.Clone(img.SubImage(r4)),
+	}
 
-	return []*image.NRGBA{imaging.Clone(s1), imaging.Clone(s2), imaging.Clone(s3), imaging.Clone(s4)}
+	nl := make([]*Img, 0)
+	for j := 0; j < len(l); j++ {
+		newNode := Img{
+			img: l[j],
+		}
+		analyzeImage(&newNode)
+		nl = append(nl, &newNode)
+	}
+	return nl
 }
 
 // calculateError takes in an array of pixels separated by R,G,B values and an array of R,G,B average values
