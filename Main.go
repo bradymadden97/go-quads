@@ -11,6 +11,7 @@ import (
 	"container/heap"
 	"fmt"
 	"image"
+	"image/color"
 	"log"
 	"math"
 
@@ -18,13 +19,15 @@ import (
 )
 
 type Img struct {
-	img   *image.NRGBA //Pointer to image
-	color []float64    //Average color stored as [R, G, B]
-	error float64      //Calculated error between average pixels and image
-	c1    *Img         //Pointer to child 1
-	c2    *Img         //Pointer to child 2
-	c3    *Img         //Pointer to child 3
-	c4    *Img         //Pointer to child 4
+	img    *image.NRGBA //Pointer to image
+	width  int          //Node width
+	height int          //Node height
+	color  []float64    //Average color stored as [R, G, B]
+	error  float64      //Calculated error between average pixels and image
+	c1     *Img         //Pointer to child 1
+	c2     *Img         //Pointer to child 2
+	c3     *Img         //Pointer to child 3
+	c4     *Img         //Pointer to child 4
 }
 
 type MinHeap []*Img
@@ -42,7 +45,9 @@ func main() {
 
 	//Create Img object, get initial error, start Quadtree
 	headNode := Img{
-		img: img,
+		img:    img,
+		width:  img.Bounds().Max.X,
+		height: img.Bounds().Max.Y,
 	}
 	analyzeImage(&headNode)
 
@@ -65,6 +70,8 @@ func main() {
 		heap.Push(&mh, a.c3)
 		heap.Push(&mh, a.c4)
 	}
+
+	displayImage(&headNode)
 }
 
 func (mh MinHeap) Len() int { return len(mh) }
@@ -88,6 +95,26 @@ func (mh *MinHeap) Pop() interface{} {
 func (mh *MinHeap) Push(x interface{}) {
 	img := x.(*Img)
 	*mh = append(*mh, img)
+}
+
+func displayImage(head *Img) {
+	base := color.RGBA{uint8(head.color[0]), uint8(head.color[1]), uint8(head.color[2]), 1}
+	canvas := imaging.New(head.width, head.height, base)
+	output := traverseTree(canvas, head, image.Point{0, 0})
+	imaging.Save(output, "output.jpg")
+}
+
+func traverseTree(canvas *image.NRGBA, node *Img, p image.Point) *image.NRGBA {
+	if node.c1 == nil && node.c2 == nil && node.c3 == nil && node.c4 == nil {
+		a := imaging.New(node.width, node.height, color.RGBA{uint8(node.color[0]), uint8(node.color[1]), uint8(node.color[2]), 1})
+		imaging.Paste(canvas, a, p)
+	} else {
+		canvas = traverseTree(canvas, node.c1, p)
+		canvas = traverseTree(canvas, node.c2, image.Point{p.X + int(node.width/2), p.Y})
+		canvas = traverseTree(canvas, node.c3, image.Point{p.X, p.Y + int(node.height/2)})
+		canvas = traverseTree(canvas, node.c4, image.Point{p.X + int(node.width/2), p.Y + int(node.height/2)})
+	}
+	return canvas
 }
 
 // analyzeImage takes in an Img and returns the error
@@ -121,7 +148,9 @@ func splitImage(img *image.NRGBA) []*Img {
 	nl := make([]*Img, 0)
 	for j := 0; j < len(l); j++ {
 		newNode := Img{
-			img: l[j],
+			img:    l[j],
+			width:  l[j].Bounds().Max.X,
+			height: l[j].Bounds().Max.Y,
 		}
 		analyzeImage(&newNode)
 		nl = append(nl, &newNode)
