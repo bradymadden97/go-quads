@@ -1,10 +1,4 @@
 // Main.go
-
-/*
-** Using quadtree to keep track of order of images to piece back together recursively
-** Using minheap to quickly push new subimages and pop highest-error image
- */
-
 package main
 
 import (
@@ -18,23 +12,9 @@ import (
 	"github.com/disintegration/imaging"
 )
 
-type Img struct {
-	img    *image.NRGBA //Pointer to image
-	width  int          //Node width
-	height int          //Node height
-	color  []float64    //Average color stored as [R, G, B]
-	error  float64      //Calculated error between average pixels and image
-	c1     *Img         //Pointer to child 1
-	c2     *Img         //Pointer to child 2
-	c3     *Img         //Pointer to child 3
-	c4     *Img         //Pointer to child 4
-}
-
-type MinHeap []*Img
-
 func main() {
 	//Get input image and convert to NRGBA
-	input_img, err := imaging.Open("tiger.jpg")
+	input_img, err := imaging.Open("sunflower.jpg")
 	if err != nil {
 		log.Fatalf("Open image failed: %v", err)
 	}
@@ -57,9 +37,9 @@ func main() {
 	heap.Init(&mh)
 
 	//Loop
-	iterations := 5
+	iterations := 2000
 	for i := 0; i < iterations; i++ {
-		a := mh.Pop().(*Img)
+		a := heap.Pop(&mh).(*Img)
 		c := splitImage(a.img)
 
 		a.img = nil
@@ -71,43 +51,21 @@ func main() {
 		heap.Push(&mh, a.c4)
 	}
 
-	displayImage(&headNode)
+	fo := displayImage(&headNode)
+	imaging.Save(fo, "./out/flowerout_final.jpg")
 }
 
-func (mh MinHeap) Len() int { return len(mh) }
-
-func (mh MinHeap) Less(i, j int) bool {
-	return mh[i].error > mh[j].error
-}
-
-func (mh MinHeap) Swap(i, j int) {
-	mh[i], mh[j] = mh[j], mh[i]
-}
-
-func (mh *MinHeap) Pop() interface{} {
-	old := *mh
-	n := len(old)
-	img := old[n-1]
-	*mh = old[0 : n-1]
-	return img
-}
-
-func (mh *MinHeap) Push(x interface{}) {
-	img := x.(*Img)
-	*mh = append(*mh, img)
-}
-
-func displayImage(head *Img) {
-	base := color.RGBA{uint8(head.color[0]), uint8(head.color[1]), uint8(head.color[2]), 1}
+func displayImage(head *Img) *image.NRGBA {
+	base := color.RGBA{uint8(head.color[0]), uint8(head.color[1]), uint8(head.color[2]), 255}
 	canvas := imaging.New(head.width, head.height, base)
-	output := traverseTree(canvas, head, image.Point{0, 0})
-	imaging.Save(output, "output.jpg")
+	return traverseTree(canvas, head, image.Point{0, 0})
 }
 
 func traverseTree(canvas *image.NRGBA, node *Img, p image.Point) *image.NRGBA {
 	if node.c1 == nil && node.c2 == nil && node.c3 == nil && node.c4 == nil {
-		a := imaging.New(node.width, node.height, color.RGBA{uint8(node.color[0]), uint8(node.color[1]), uint8(node.color[2]), 1})
-		imaging.Paste(canvas, a, p)
+		c := color.RGBA{uint8(node.color[0]), uint8(node.color[1]), uint8(node.color[2]), 255}
+		a := imaging.New(node.width, node.height, c)
+		canvas = imaging.Paste(canvas, a, p)
 	} else {
 		canvas = traverseTree(canvas, node.c1, p)
 		canvas = traverseTree(canvas, node.c2, image.Point{p.X + int(node.width/2), p.Y})
