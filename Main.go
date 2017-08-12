@@ -8,13 +8,61 @@ import (
 	"image/color"
 	"log"
 	"math"
+	"strconv"
 
 	"github.com/disintegration/imaging"
 )
 
+type Img struct {
+	hist   [][]int   //Histogram of image stored as [R, G, B]
+	pix    int       //Number of pixels in image
+	color  []float64 //Average color stored as [R, G, B]
+	error  float64   //Calculated error between average pixels and image
+	width  int       //Picture width
+	height int       //Picture height
+	c1     *Img      //Pointer to child 1
+	c2     *Img      //Pointer to child 2
+	c3     *Img      //Pointer to child 3
+	c4     *Img      //Pointer to child 4
+}
+
 func main() {
+	headNode := initialize("tiger.jpg")
+
+	//Begin minheap
+	mh := make(MinHeap, 1)
+	mh[0] = headNode
+	heap.Init(&mh)
+
+	//Loop
+	iterations := 200
+	for i := 0; i < iterations; i++ {
+		a := heap.Pop(&mh).(*Img)
+		a.c1, a.c2, a.c3, a.c4 = splitHistogram(a.hist, a.width, a.height)
+
+		heap.Push(&mh, a.c1)
+		heap.Push(&mh, a.c2)
+		heap.Push(&mh, a.c3)
+		heap.Push(&mh, a.c4)
+
+		/*for z := 0; z < len(mh); z++ {
+			fmt.Printf("%v, ", mh[z].error)
+		}*/
+		fmt.Printf("%v", a.error)
+		fmt.Println()
+
+		ifo := displayImage(headNode)
+		imaging.Save(ifo, "./out/cheetah_"+strconv.Itoa(i)+".jpg")
+
+	}
+
+	fo := displayImage(headNode)
+	imaging.Save(fo, "./out/cheetah_final.jpg")
+}
+
+func initialize(fn string) *Img {
 	//Get input image and convert to NRGBA
-	input_img, err := imaging.Open("sunflower.jpg")
+	input_img, err := imaging.Open(fn)
 	if err != nil {
 		log.Fatalf("Open image failed: %v", err)
 	}
@@ -25,34 +73,13 @@ func main() {
 
 	//Create Img object, get initial error, start Quadtree
 	headNode := Img{
-		img:    img,
 		width:  img.Bounds().Max.X,
 		height: img.Bounds().Max.Y,
 	}
+	headNode.hist, headNode.pix = histogram(img)
 	analyzeImage(&headNode)
 
-	//Begin minheap
-	mh := make(MinHeap, 1)
-	mh[0] = &headNode
-	heap.Init(&mh)
-
-	//Loop
-	iterations := 2000
-	for i := 0; i < iterations; i++ {
-		a := heap.Pop(&mh).(*Img)
-		c := splitImage(a.img)
-
-		a.img = nil
-		a.c1, a.c2, a.c3, a.c4 = c[0], c[1], c[2], c[3]
-
-		heap.Push(&mh, a.c1)
-		heap.Push(&mh, a.c2)
-		heap.Push(&mh, a.c3)
-		heap.Push(&mh, a.c4)
-	}
-
-	fo := displayImage(&headNode)
-	imaging.Save(fo, "./out/flowerout_final.jpg")
+	return &headNode
 }
 
 func displayImage(head *Img) *image.NRGBA {
@@ -77,14 +104,13 @@ func traverseTree(canvas *image.NRGBA, node *Img, p image.Point) *image.NRGBA {
 
 // analyzeImage takes in an Img and returns the error
 func analyzeImage(i *Img) {
-	img := i.img
-	hist, pix := histogram(img)
-	avg := averageRGB(hist, pix)
+	avg := averageRGB(i.hist, i.pix)
 	i.color = avg
-	i.error = calculateError(hist, avg)
+	i.error = calculateError(i.hist, avg)
 	return
 }
 
+/*
 // splitImage splits the input image into 4 equal images by width and height
 func splitImage(img *image.NRGBA) []*Img {
 	img_min_x, img_max_x := img.Bounds().Min.X, img.Bounds().Max.X
@@ -115,6 +141,7 @@ func splitImage(img *image.NRGBA) []*Img {
 	}
 	return nl
 }
+*/
 
 // calculateError takes in an array of pixels separated by R,G,B values and an array of R,G,B average values
 // it returns an int64 for the total error
@@ -142,6 +169,38 @@ func averageRGB(hist [][]int, p int) []float64 {
 	return avg
 }
 
+// splitHistogram takes in a double array and length and width of image and returns four arrays split by quadrants of subimage
+func splitHistogram(h [][]int, w int, l int) (*Img, *Img, *Img, *Img) {
+	c1, c2, c3, c4 := make([][]int, 0), make([][]int, 0), make([][]int, 0), make([][]int, 0)
+	for i := 0; i < len(h); i++ {
+		if i < int(l/2)*w {
+			if i%w < w/2 {
+				c1 = append(c1, h[i])
+			} else {
+				c2 = append(c2, h[i])
+			}
+		} else {
+			if i%w < w/2 {
+				c3 = append(c3, h[i])
+			} else {
+				c4 = append(c4, h[i])
+			}
+		}
+	}
+	return newNode(c1, w, l), newNode(c2, w, l), newNode(c3, w, l), newNode(c4, w, l)
+}
+
+func newNode(hist [][]int, w int, h int) *Img {
+	newNode := Img{
+		width:  int(w / 2),
+		height: int(h / 2),
+		hist:   hist,
+	}
+	newNode.pix = newNode.width * newNode.height
+	analyzeImage(&newNode)
+	return &newNode
+}
+
 // histogram takes in an image and returns a list of pixels separated by R,G,B values
 func histogram(img *image.NRGBA) ([][]int, int) {
 	w := img.Bounds().Max.X
@@ -161,7 +220,6 @@ func histogram(img *image.NRGBA) ([][]int, int) {
 			hist[y*w+x] = i
 		}
 	}
-
 	return hist, p
 }
 
