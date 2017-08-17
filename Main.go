@@ -24,9 +24,15 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	mh := make(MinHeap, 1)
 	mh[0] = headNode
 	heap.Init(&mh)
 
-	iterate(&mh, headNode, 50, "sunflower.jpg")
+	iterate(&mh, headNode, 10, "sunflower.jpg")
+
+	e := toGIF("sunflower.jpg", 20)
+	if e != nil {
+		log.Fatal(e)
+	}
 }

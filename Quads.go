@@ -148,7 +148,11 @@ func saveImage(i *Img, in string, itr int) {
 }
 
 func concatName(name string, itr int) string {
+	n, end := splitName(name)
+	return n + strconv.Itoa(itr) + "." + end
+}
+
+func splitName(name string) (string, string) {
 	splt := strings.Split(name, ".")
-	n := strings.Join(splt[:len(splt)-1], ".")
-	return n + strconv.Itoa(itr) + "." + splt[len(splt)-1]
+	return strings.Join(splt[:len(splt)-1], "."), splt[len(splt)-1]
 }

@@ -2,9 +2,12 @@
 package main
 
 import (
+	"fmt"
 	"image"
+	"image/gif"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/disintegration/imaging"
 )
@@ -63,4 +66,53 @@ func nearestSquare(n int) int {
 		i *= 2
 	}
 	return i / 2
+}
+
+func toGIF(fn string, delay int) error {
+	name, _ := splitName(fn)
+	outGIF := &gif.GIF{}
+	imgList := []string{}
+	var opt gif.Options
+	opt.NumColors = 256
+
+	err := filepath.Walk("./out", func(i string, f os.FileInfo, err error) error {
+		imgList = append(imgList, i)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	for _, i := range imgList[1:] {
+		img, open_err := openImage(i)
+		if open_err != nil {
+			return open_err
+		}
+
+		out, create_err := os.Create("g.gif")
+		if create_err != nil {
+			return create_err
+		}
+
+		encode_err := gif.Encode(out, img, &opt)
+		if encode_err != nil {
+			return encode_err
+		}
+
+		g, decode_err := gif.Decode(out)
+		if decode_err != nil {
+			fmt.Printf("%v", "hello")
+			return decode_err
+		}
+
+		outGIF.Image = append(outGIF.Image, g.(*image.Paletted))
+		outGIF.Delay = append(outGIF.Delay, delay)
+	}
+
+	out_gif, gif_err := os.OpenFile("./out/"+name+".gif", os.O_WRONLY|os.O_CREATE, 0600)
+	if gif_err != nil {
+		return gif_err
+	}
+	defer out_gif.Close()
+	gif.EncodeAll(out_gif, outGIF)
+	return nil
 }
