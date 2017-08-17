@@ -24,7 +24,7 @@ func initialize(fn string) (*Img, error) {
 	return &headNode, nil
 }
 
-func iterate(mh *MinHeap, hn *Img, itr int, fn string) {
+func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool) {
 	for i := 0; i < itr; i++ {
 		a := heap.Pop(mh).(*Img)
 		a.c1, a.c2, a.c3, a.c4 = splitHistogram(a.hist, a.width, a.height)
@@ -34,7 +34,7 @@ func iterate(mh *MinHeap, hn *Img, itr int, fn string) {
 		heap.Push(mh, a.c3)
 		heap.Push(mh, a.c4)
 
-		saveImage(hn, fn, i)
+		saveImage(hn, fn, i, b)
 	}
 }
 
@@ -119,28 +119,54 @@ func newNode(hist [][]int, w int, h int) *Img {
 	return &newNode
 }
 
-func displayImage(head *Img) *image.NRGBA {
+func displayImage(head *Img, border bool) *image.NRGBA {
 	base := color.RGBA{uint8(head.color[0]), uint8(head.color[1]), uint8(head.color[2]), 255}
 	canvas := imaging.New(head.width, head.height, base)
-	return traverseTree(canvas, head, image.Point{0, 0})
+	if border {
+		canvas = addBorder(head.width, head.height, canvas)
+	}
+	return traverseTree(canvas, head, image.Point{0, 0}, border)
 }
 
-func traverseTree(canvas *image.NRGBA, node *Img, p image.Point) *image.NRGBA {
+func traverseTree(canvas *image.NRGBA, node *Img, p image.Point, border bool) *image.NRGBA {
 	if node.c1 == nil && node.c2 == nil && node.c3 == nil && node.c4 == nil {
 		c := color.RGBA{uint8(node.color[0]), uint8(node.color[1]), uint8(node.color[2]), 255}
 		a := imaging.New(node.width, node.height, c)
+		if border {
+			a = addBorder(node.width, node.height, a)
+		}
 		canvas = imaging.Paste(canvas, a, p)
 	} else {
-		canvas = traverseTree(canvas, node.c1, p)
-		canvas = traverseTree(canvas, node.c2, image.Point{p.X + int(node.width/2), p.Y})
-		canvas = traverseTree(canvas, node.c3, image.Point{p.X, p.Y + int(node.height/2)})
-		canvas = traverseTree(canvas, node.c4, image.Point{p.X + int(node.width/2), p.Y + int(node.height/2)})
+		canvas = traverseTree(canvas, node.c1, p, border)
+		canvas = traverseTree(canvas, node.c2, image.Point{p.X + int(node.width/2), p.Y}, border)
+		canvas = traverseTree(canvas, node.c3, image.Point{p.X, p.Y + int(node.height/2)}, border)
+		canvas = traverseTree(canvas, node.c4, image.Point{p.X + int(node.width/2), p.Y + int(node.height/2)}, border)
 	}
 	return canvas
 }
 
-func saveImage(i *Img, in string, itr int) {
-	fo := displayImage(i)
+func addBorder(w int, h int, img *image.NRGBA) *image.NRGBA {
+	bor := []uint8{0, 0, 0, 255}
+
+	// fill first and last row black
+	for x := 0; x < w; x++ {
+		copy(img.Pix[x*4:(x+1)*4], bor)
+	}
+	for x := 0; x < w; x++ {
+		copy(img.Pix[x*4+(h-1)*img.Stride:(x+1)*4+(h-1)*img.Stride], bor)
+	}
+
+	// fill sides of each row black
+	for y := 1; y < h-1; y++ {
+		copy(img.Pix[y*img.Stride:y*img.Stride+4], bor)
+		copy(img.Pix[y*img.Stride+w*4-4:y*img.Stride+w*4], bor)
+	}
+
+	return img
+}
+
+func saveImage(i *Img, in string, itr int, border bool) {
+	fo := displayImage(i, border)
 	n := concatName(in, itr)
 	imaging.Save(fo, "./out/"+n)
 }

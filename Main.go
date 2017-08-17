@@ -20,9 +20,9 @@ type Img struct {
 }
 
 func main() {
-	f, i, g, d := initializeFlags()
+	f, i, g, d, b := initializeFlags()
 	if *f == "" {
-		log.Fatal("%v", "-f <input image> required")
+		log.Fatal(" -f <input image> required")
 	}
 
 	headNode, err := initialize(*f)
@@ -34,7 +34,7 @@ func main() {
 	mh[0] = headNode
 	heap.Init(&mh)
 
-	iterate(&mh, headNode, *i, *f)
+	iterate(&mh, headNode, *i, *f, *b)
 
 	if *g {
 		err = toGIF(*f, *d)
