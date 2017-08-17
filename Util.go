@@ -8,6 +8,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/disintegration/imaging"
 )
@@ -66,6 +68,16 @@ func nearestSquare(n int) int {
 		i *= 2
 	}
 	return i / 2
+}
+
+func concatName(name string, itr int) string {
+	n, end := splitName(name)
+	return n + strconv.Itoa(itr) + "." + end
+}
+
+func splitName(name string) (string, string) {
+	splt := strings.Split(name, ".")
+	return strings.Join(splt[:len(splt)-1], "."), splt[len(splt)-1]
 }
 
 func toGIF(fn string, delay int) error {

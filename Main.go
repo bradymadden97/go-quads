@@ -20,7 +20,12 @@ type Img struct {
 }
 
 func main() {
-	headNode, err := initialize("sunflower.jpg")
+	f, i, g, d := initializeFlags()
+	if *f == "" {
+		log.Fatal("%v", "-f <input image> required")
+	}
+
+	headNode, err := initialize(*f)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -29,10 +34,12 @@ func main() {
 	mh[0] = headNode
 	heap.Init(&mh)
 
-	iterate(&mh, headNode, 10, "sunflower.jpg")
+	iterate(&mh, headNode, *i, *f)
 
-	e := toGIF("sunflower.jpg", 20)
-	if e != nil {
-		log.Fatal(e)
+	if *g {
+		err = toGIF(*f, *d)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }
