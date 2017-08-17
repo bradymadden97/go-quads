@@ -7,7 +7,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/andybons/gogif"
@@ -70,9 +69,9 @@ func nearestSquare(n int) int {
 	return i / 2
 }
 
-func concatName(name string, itr int) string {
+func concatName(name string, itr string) string {
 	n, end := splitName(name)
-	return n + strconv.Itoa(itr) + "." + end
+	return itr + n + "." + end
 }
 
 func splitName(name string) (string, string) {

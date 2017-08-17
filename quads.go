@@ -2,10 +2,12 @@
 package main
 
 import (
+	"bytes"
 	"container/heap"
 	"image"
 	"image/color"
 	"math"
+	"strconv"
 
 	"github.com/disintegration/imaging"
 )
@@ -24,7 +26,7 @@ func initialize(fn string) (*Img, error) {
 	return &headNode, nil
 }
 
-func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool) {
+func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool) error {
 	for i := 0; i < itr; i++ {
 		a := heap.Pop(mh).(*Img)
 		a.c1, a.c2, a.c3, a.c4 = splitHistogram(a.hist, a.width, a.height)
@@ -34,8 +36,12 @@ func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool) {
 		heap.Push(mh, a.c3)
 		heap.Push(mh, a.c4)
 
-		saveImage(hn, fn, i, b)
+		err := saveImage(hn, fn, i, b, itr)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func histogram(img *image.NRGBA) ([][]int, int) {
@@ -165,8 +171,16 @@ func addBorder(w int, h int, img *image.NRGBA) *image.NRGBA {
 	return img
 }
 
-func saveImage(i *Img, in string, itr int, border bool) {
+func saveImage(i *Img, in string, itr int, border bool, max int) error {
 	fo := displayImage(i, border)
-	n := concatName(in, itr)
+	il, ml := len(strconv.Itoa(itr)), len(strconv.Itoa(max))
+	var num bytes.Buffer
+	for i := il; i < ml; i++ {
+		num.WriteString("0")
+	}
+	num.WriteString(strconv.Itoa(itr))
+	n := concatName(in, num.String())
 	imaging.Save(fo, "./out/"+n)
+
+	return nil
 }

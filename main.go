@@ -34,7 +34,10 @@ func main() {
 	mh[0] = headNode
 	heap.Init(&mh)
 
-	iterate(&mh, headNode, *i, *f, *b)
+	err = iterate(&mh, headNode, *i, *f, *b)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if *g {
 		err = toGIF(*f, *d)
