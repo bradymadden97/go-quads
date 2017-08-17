@@ -224,12 +224,3 @@ func histogram(img *image.NRGBA) ([][]int, int) {
 }
 
 // toNRGBA converts any image type to *image.NRGBA with min-point at (0, 0).
-func toNRGBA(img image.Image) (*image.NRGBA, error) {
-	srcBounds := img.Bounds()
-	if srcBounds.Min.X == 0 && srcBounds.Min.Y == 0 {
-		if src0, ok := img.(*image.NRGBA); ok {
-			return src0, nil
-		}
-	}
-	return nil, fmt.Errorf("Incorrect Bounds: NRGBA", nil)
-}
