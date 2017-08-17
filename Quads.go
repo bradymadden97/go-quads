@@ -1,4 +1,4 @@
-// Quads.go
+// quads.go
 package main
 
 import (

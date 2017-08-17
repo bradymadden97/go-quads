@@ -1,4 +1,4 @@
-// Cli
+// cli
 package main
 
 import (

@@ -1,4 +1,4 @@
-// Heap.go
+// heap.go
 package main
 
 type MinHeap []*Img
