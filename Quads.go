@@ -1,4 +1,4 @@
-// Quads
+// Quads.go
 package main
 
 import (
@@ -46,48 +46,12 @@ func traverseTree(canvas *image.NRGBA, node *Img, p image.Point) *image.NRGBA {
 	return canvas
 }
 
-// analyzeImage takes in an Img and returns the error
 func analyzeImage(i *Img) ([]float64, float64) {
 	avg := averageRGB(i.hist, i.pix)
 	err := calculateError(i.hist, avg)
 	return avg, err
 }
 
-/*
-// splitImage splits the input image into 4 equal images by width and height
-func splitImage(img *image.NRGBA) []*Img {
-	img_min_x, img_max_x := img.Bounds().Min.X, img.Bounds().Max.X
-	img_min_y, img_max_y := img.Bounds().Min.Y, img.Bounds().Max.Y
-	img_width, img_height := img_max_x-img_min_x, img_max_y-img_min_y
-
-	r1 := image.Rect(img_min_x, img_min_y, img_width/2, img_height/2)
-	r2 := image.Rect(img_width/2, img_min_y, img_max_x, img_height/2)
-	r3 := image.Rect(img_min_x, img_height/2, img_width/2, img_max_y)
-	r4 := image.Rect(img_width/2, img_height/2, img_max_x, img_max_y)
-
-	l := []*image.NRGBA{
-		imaging.Clone(img.SubImage(r1)),
-		imaging.Clone(img.SubImage(r2)),
-		imaging.Clone(img.SubImage(r3)),
-		imaging.Clone(img.SubImage(r4)),
-	}
-
-	nl := make([]*Img, 0)
-	for j := 0; j < len(l); j++ {
-		newNode := Img{
-			img:    l[j],
-			width:  l[j].Bounds().Max.X,
-			height: l[j].Bounds().Max.Y,
-		}
-		analyzeImage(&newNode)
-		nl = append(nl, &newNode)
-	}
-	return nl
-}
-*/
-
-// calculateError takes in an array of pixels separated by R,G,B values and an array of R,G,B average values
-// it returns an int64 for the total error
 func calculateError(hist [][]int, avg []float64) float64 {
 	re, ge, be := 0.0, 0.0, 0.0
 	ravg, gavg, bavg := avg[0], avg[1], avg[2]
@@ -96,10 +60,9 @@ func calculateError(hist [][]int, avg []float64) float64 {
 		ge += math.Pow(float64(hist[i][1])-gavg, 2)
 		be += math.Pow(float64(hist[i][2])-bavg, 2)
 	}
-	return (re + ge + be) / float64(len(hist))
+	return (re + ge + be)
 }
 
-// averageRGB takes in an array of pixels separated by R,G,B values and calculates the average R,G,B value
 func averageRGB(hist [][]int, p int) []float64 {
 	r, g, b := 0, 0, 0
 	for i := 0; i < p; i++ {
@@ -112,7 +75,6 @@ func averageRGB(hist [][]int, p int) []float64 {
 	return avg
 }
 
-// splitHistogram takes in a double array and length and width of image and returns four arrays split by quadrants of subimage
 func splitHistogram(h [][]int, w int, l int) (*Img, *Img, *Img, *Img) {
 	c1, c2, c3, c4 := make([][]int, 0), make([][]int, 0), make([][]int, 0), make([][]int, 0)
 	for i := 0; i < len(h); i++ {
@@ -144,7 +106,6 @@ func newNode(hist [][]int, w int, h int) *Img {
 	return &newNode
 }
 
-// histogram takes in an image and returns a list of pixels separated by R,G,B values
 func histogram(img *image.NRGBA) ([][]int, int) {
 	w := img.Bounds().Max.X
 	h := img.Bounds().Max.Y
