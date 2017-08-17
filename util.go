@@ -2,7 +2,6 @@
 package main
 
 import (
-	"fmt"
 	"image"
 	"image/gif"
 	"io"
@@ -11,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/andybons/gogif"
 	"github.com/disintegration/imaging"
 )
 
@@ -84,8 +84,6 @@ func toGIF(fn string, delay int) error {
 	name, _ := splitName(fn)
 	outGIF := &gif.GIF{}
 	imgList := []string{}
-	var opt gif.Options
-	opt.NumColors = 256
 
 	err := filepath.Walk("./out", func(i string, f os.FileInfo, err error) error {
 		imgList = append(imgList, i)
@@ -99,24 +97,11 @@ func toGIF(fn string, delay int) error {
 		if open_err != nil {
 			return open_err
 		}
-
-		out, create_err := os.Create("g.gif")
-		if create_err != nil {
-			return create_err
-		}
-
-		encode_err := gif.Encode(out, img, &opt)
-		if encode_err != nil {
-			return encode_err
-		}
-
-		g, decode_err := gif.Decode(out)
-		if decode_err != nil {
-			fmt.Printf("%v", "hello")
-			return decode_err
-		}
-
-		outGIF.Image = append(outGIF.Image, g.(*image.Paletted))
+		bounds := img.Bounds()
+		palettedImage := image.NewPaletted(bounds, nil)
+		quantizer := gogif.MedianCutQuantizer{NumColor: 256}
+		quantizer.Quantize(palettedImage, bounds, img, image.ZP)
+		outGIF.Image = append(outGIF.Image, palettedImage)
 		outGIF.Delay = append(outGIF.Delay, delay)
 	}
 
