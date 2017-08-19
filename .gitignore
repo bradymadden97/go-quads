@@ -4,3 +4,6 @@
 *.jpeg
 *.jpg
 *.png
+out/
+.idea/
+*.pyc

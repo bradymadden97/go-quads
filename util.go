@@ -3,13 +3,12 @@ package main
 
 import (
 	"image"
-	"image/gif"
 	"io"
 	"os"
-	"path/filepath"
+	"os/exec"
+	"strconv"
 	"strings"
 
-	"github.com/andybons/gogif"
 	"github.com/disintegration/imaging"
 )
 
@@ -79,36 +78,11 @@ func splitName(name string) (string, string) {
 	return strings.Join(splt[:len(splt)-1], "."), splt[len(splt)-1]
 }
 
-func toGIF(fn string, delay int) error {
-	name, _ := splitName(fn)
-	outGIF := &gif.GIF{}
-	imgList := []string{}
-
-	err := filepath.Walk("./out", func(i string, f os.FileInfo, err error) error {
-		imgList = append(imgList, i)
-		return nil
-	})
-	if err != nil {
+func toGIF(name string, frames int, pause int) error {
+	n, _ := splitName(name)
+	cmd := exec.Command("python", "gif.py", "-n", n, "-f", strconv.Itoa(frames), "-p", strconv.Itoa(pause))
+	if err := cmd.Run(); err != nil {
 		return err
 	}
-	for _, i := range imgList[1:] {
-		img, open_err := openImage(i)
-		if open_err != nil {
-			return open_err
-		}
-		bounds := img.Bounds()
-		palettedImage := image.NewPaletted(bounds, nil)
-		quantizer := gogif.MedianCutQuantizer{NumColor: 256}
-		quantizer.Quantize(palettedImage, bounds, img, image.ZP)
-		outGIF.Image = append(outGIF.Image, palettedImage)
-		outGIF.Delay = append(outGIF.Delay, delay)
-	}
-
-	out_gif, gif_err := os.OpenFile("./out/"+name+".gif", os.O_WRONLY|os.O_CREATE, 0600)
-	if gif_err != nil {
-		return gif_err
-	}
-	defer out_gif.Close()
-	gif.EncodeAll(out_gif, outGIF)
 	return nil
 }
