@@ -20,7 +20,7 @@ type Img struct {
 }
 
 func main() {
-	n, i, g, f, p, b := initializeFlags()
+	n, i, g, gf, gp, b := initializeFlags()
 	if *n == "" {
 		log.Fatal(" -f <input image> required")
 	}
@@ -40,7 +40,7 @@ func main() {
 	}
 
 	if *g {
-		err = toGIF(*n, *f, *p)
+		err = toGIF(*n, *gf, *gp)
 		if err != nil {
 			log.Fatal(err)
 		}

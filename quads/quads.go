@@ -151,6 +151,18 @@ func traverseTree(canvas *image.NRGBA, node *Img, p image.Point, border bool) *i
 	return canvas
 }
 
+func addCircle(w int, h int, img *image.NRGBA) *image.NRGBA {
+	blk := []uint8{0, 0, 0, 255}
+	for y := 0; y < h; y++ {
+		for x := 0; x < w; x++ {
+			if euclideanDistance(w/2, x, h/2, y) >= float64(w/2) {
+				copy(img.Pix[y*img.Stride+x*4:y*img.Stride+(x+1)*4], blk)
+			}
+		}
+	}
+	return img
+}
+
 func addBorder(w int, h int, img *image.NRGBA) *image.NRGBA {
 	bor := []uint8{0, 0, 0, 255}
 
