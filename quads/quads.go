@@ -26,7 +26,7 @@ func initialize(fn string) (*Img, error) {
 	return &headNode, nil
 }
 
-func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, ds bool) error {
+func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, c bool, ds bool) error {
 	for i := 0; i < itr-1; i++ {
 		a := heap.Pop(mh).(*Img)
 		a.c1, a.c2, a.c3, a.c4 = splitHistogram(a.hist, a.width, a.height)
@@ -37,13 +37,13 @@ func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, ds bool) error {
 		heap.Push(mh, a.c4)
 
 		if !ds {
-			err := saveImage(hn, fn, i, b, itr)
+			err := saveImage(hn, fn, i, b, c, itr)
 			if err != nil {
 				return err
 			}
 		}
 	}
-	err := saveImage(hn, fn, itr, b, itr)
+	err := saveImage(hn, fn, itr, b, c, itr)
 	if err != nil {
 		return err
 	}
@@ -131,28 +131,31 @@ func newNode(hist [][]int, w int, h int) *Img {
 	return &newNode
 }
 
-func displayImage(head *Img, border bool) *image.NRGBA {
+func displayImage(head *Img, border bool, circle bool) *image.NRGBA {
 	base := color.RGBA{uint8(head.color[0]), uint8(head.color[1]), uint8(head.color[2]), 255}
 	canvas := imaging.New(head.width, head.height, base)
 	if border {
 		canvas = addBorder(head.width, head.height, canvas)
 	}
-	return traverseTree(canvas, head, image.Point{0, 0}, border)
+	return traverseTree(canvas, head, image.Point{0, 0}, border, circle)
 }
 
-func traverseTree(canvas *image.NRGBA, node *Img, p image.Point, border bool) *image.NRGBA {
+func traverseTree(canvas *image.NRGBA, node *Img, p image.Point, border bool, circle bool) *image.NRGBA {
 	if node.c1 == nil && node.c2 == nil && node.c3 == nil && node.c4 == nil {
 		c := color.RGBA{uint8(node.color[0]), uint8(node.color[1]), uint8(node.color[2]), 255}
 		a := imaging.New(node.width, node.height, c)
 		if border {
 			a = addBorder(node.width, node.height, a)
 		}
+		if circle {
+			a = addCircle(node.width, node.height, a)
+		}
 		canvas = imaging.Paste(canvas, a, p)
 	} else {
-		canvas = traverseTree(canvas, node.c1, p, border)
-		canvas = traverseTree(canvas, node.c2, image.Point{p.X + int(node.width/2), p.Y}, border)
-		canvas = traverseTree(canvas, node.c3, image.Point{p.X, p.Y + int(node.height/2)}, border)
-		canvas = traverseTree(canvas, node.c4, image.Point{p.X + int(node.width/2), p.Y + int(node.height/2)}, border)
+		canvas = traverseTree(canvas, node.c1, p, border, circle)
+		canvas = traverseTree(canvas, node.c2, image.Point{p.X + int(node.width/2), p.Y}, border, circle)
+		canvas = traverseTree(canvas, node.c3, image.Point{p.X, p.Y + int(node.height/2)}, border, circle)
+		canvas = traverseTree(canvas, node.c4, image.Point{p.X + int(node.width/2), p.Y + int(node.height/2)}, border, circle)
 	}
 	return canvas
 }
@@ -162,7 +165,7 @@ func addCircle(w int, h int, img *image.NRGBA) *image.NRGBA {
 	for y := 0; y < h; y++ {
 		for x := 0; x < w; x++ {
 			if euclideanDistance(w/2, x, h/2, y) >= float64(w/2) {
-				copy(img.Pix[y*img.Stride+x*4:y*img.Stride+(x+1)*4], blk)
+				copy(img.Pix[x*4+y*img.Stride:(x+1)*4+y*img.Stride], blk)
 			}
 		}
 	}
@@ -189,8 +192,8 @@ func addBorder(w int, h int, img *image.NRGBA) *image.NRGBA {
 	return img
 }
 
-func saveImage(i *Img, in string, itr int, border bool, max int) error {
-	fo := displayImage(i, border)
+func saveImage(i *Img, in string, itr int, border bool, color bool, max int) error {
+	fo := displayImage(i, border, color)
 	il, ml := len(strconv.Itoa(itr)), len(strconv.Itoa(max))
 	var num bytes.Buffer
 	for i := il; i < ml; i++ {
