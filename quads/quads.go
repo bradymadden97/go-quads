@@ -26,8 +26,8 @@ func initialize(fn string) (*Img, error) {
 	return &headNode, nil
 }
 
-func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool) error {
-	for i := 0; i < itr; i++ {
+func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, ds bool) error {
+	for i := 0; i < itr-1; i++ {
 		a := heap.Pop(mh).(*Img)
 		a.c1, a.c2, a.c3, a.c4 = splitHistogram(a.hist, a.width, a.height)
 
@@ -36,10 +36,16 @@ func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool) error {
 		heap.Push(mh, a.c3)
 		heap.Push(mh, a.c4)
 
-		err := saveImage(hn, fn, i, b, itr)
-		if err != nil {
-			return err
+		if !ds {
+			err := saveImage(hn, fn, i, b, itr)
+			if err != nil {
+				return err
+			}
 		}
+	}
+	err := saveImage(hn, fn, itr, b, itr)
+	if err != nil {
+		return err
 	}
 	return nil
 }
