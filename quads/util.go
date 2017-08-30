@@ -73,6 +73,15 @@ func euclideanDistance(x1 int, x2 int, y1 int, y2 int) float64 {
 	return math.Sqrt(math.Pow(float64(x1-x2), 2) + math.Pow(float64(y1-y2), 2))
 }
 
+func getAngle(w int, h int, x int, y int) float64 {
+	dx, dy := math.Abs(float64(x-w/2)), math.Abs(float64(y-h/2))
+	return math.Atan(dy / dx)
+}
+
+func ovalRadius(a int, b int, theta float64) float64 {
+	return float64(a*b) / math.Sqrt(math.Pow(float64(a), 2)*math.Pow(math.Sin(theta), 2)+math.Pow(float64(b), 2)*math.Pow(math.Cos(theta), 2))
+}
+
 func concatName(name string, itr string) string {
 	n, end := splitName(name)
 	return itr + n + "." + end

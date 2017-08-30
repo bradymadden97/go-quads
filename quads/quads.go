@@ -164,7 +164,7 @@ func addCircle(w int, h int, img *image.NRGBA) *image.NRGBA {
 	blk := []uint8{0, 0, 0, 255}
 	for y := 0; y < h; y++ {
 		for x := 0; x < w; x++ {
-			if euclideanDistance(w/2, x, h/2, y) >= float64(w/2) {
+			if euclideanDistance(w/2, x, h/2, y) >= ovalRadius(w/2, h/2, getAngle(w, h, x, y)) {
 				copy(img.Pix[x*4+y*img.Stride:(x+1)*4+y*img.Stride], blk)
 			}
 		}
