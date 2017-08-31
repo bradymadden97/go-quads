@@ -15,6 +15,8 @@ Pixel art using quad trees in Go. Inspired by https://github.com/fogleman/Quads.
 
 ` -b ` : Add borders to subimages
 
+` -bc <R,G,B> ` : Border/ background color between subimages - default 0,0,0
+
 ` -c ` : Modify quads to circles
 
 ` -ds ` : Don't save intermediate images

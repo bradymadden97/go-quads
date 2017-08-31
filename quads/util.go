@@ -2,6 +2,7 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"io"
 	"math"
@@ -80,6 +81,23 @@ func getAngle(w int, h int, x int, y int) float64 {
 
 func ovalRadius(a int, b int, theta float64) float64 {
 	return float64(a*b) / math.Sqrt(math.Pow(float64(a), 2)*math.Pow(math.Sin(theta), 2)+math.Pow(float64(b), 2)*math.Pow(math.Cos(theta), 2))
+}
+
+func decodeColor(bc string) ([]uint8, error) {
+	l := strings.Split(bc, ",")
+	if len(l) != 3 {
+		return nil, fmt.Errorf("Error: backgroundcolor length %d not = 3", len(l))
+	}
+	cl := make([]uint8, 4)
+	for i := 0; i < 3; i++ {
+		s, err := strconv.ParseUint(l[i], 10, 64)
+		if err != nil || s < 0 || s > 255 {
+			return nil, err
+		}
+		cl[i] = uint8(s)
+	}
+	cl[3] = 255
+	return cl, nil
 }
 
 func concatName(name string, itr string) string {

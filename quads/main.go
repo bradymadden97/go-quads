@@ -34,7 +34,7 @@ func main() {
 	mh[0] = headNode
 	heap.Init(&mh)
 
-	err = iterate(&mh, headNode, *flags.i, *flags.f, *flags.b, *flags.c, *flags.ds)
+	err = iterate(&mh, headNode, *flags.i, *flags.f, *flags.b, *flags.c, *flags.bc, *flags.ds)
 	if err != nil {
 		log.Fatal(err)
 	}
