@@ -4,7 +4,7 @@ Pixel art using quad trees in Go. Inspired by https://github.com/fogleman/Quads.
 <br><br>
 ## Examples
 ![Imgur](http://i.imgur.com/ykwp2Aj.jpg)<br><br>
-![Imgur](http://i.imgur.com/dR0S6tJ.jpg)<br><br>
+![Imgur](http://i.imgur.com/glXj1BJ.jpg)<br><br>
 ![Imgur](http://i.imgur.com/zZ5s31K.jpg)
 
 
