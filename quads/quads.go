@@ -34,6 +34,10 @@ func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, c bool, bc string
 	}
 	for i := 0; i < itr-1; i++ {
 		a := heap.Pop(mh).(*Img)
+		if a.width <= 1 || a.height <= 1 {
+			heap.Push(mh, a)
+			break
+		}
 		a.c1, a.c2, a.c3, a.c4 = splitHistogram(a.hist, a.width, a.height)
 
 		heap.Push(mh, a.c1)
