@@ -1,1 +1,1 @@
-imageio=2.2.0
+imageio==2.2.0
