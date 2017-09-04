@@ -198,7 +198,7 @@ func saveImage(i *Img, in string, itr int, border bool, color bool, max int, col
 	}
 	num.WriteString(strconv.Itoa(itr))
 	n := concatName(in, num.String())
-	imaging.Save(fo, "./out/"+n)
+	imaging.Save(fo, outputFolder+n)
 
 	return nil
 }
