@@ -112,6 +112,7 @@ func splitName(name string) (string, string) {
 	return strings.Join(splt[:len(splt)-1], "."), splt[len(splt)-1]
 }
 
+//Referenced https://github.com/esimov/stackblur-go/blob/master/cmd/main.go
 func toGIF(imgs []image.Image, name string, delay int, pause int) error {
 	outGif := &gif.GIF{}
 	for _, i := range imgs {
