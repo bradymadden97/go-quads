@@ -43,13 +43,13 @@ func main() {
 	mh[0] = headNode
 	heap.Init(&mh)
 
-	err = iterate(&mh, headNode, *flags.i, *flags.f, *flags.b, *flags.c, *flags.bc, *flags.ds)
-	if err != nil {
-		log.Fatal(err)
+	imgs, err_itr := iterate(&mh, headNode, *flags.i, *flags.f, *flags.b, *flags.c, *flags.bc, *flags.s)
+	if err_itr != nil {
+		log.Fatal(err_itr)
 	}
 
 	if *flags.g {
-		err = toGIF(*flags.f, *flags.gf, *flags.gp)
+		err = toGIF(imgs, *flags.f, *flags.gd, *flags.gp)
 		if err != nil {
 			log.Fatal(err)
 		}

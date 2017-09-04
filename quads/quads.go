@@ -26,10 +26,11 @@ func initialize(fn string) (*Img, error) {
 	return &headNode, nil
 }
 
-func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, c bool, bc string, ds bool) error {
+func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, c bool, bc string, s bool) ([]image.Image, error) {
+	var imgs []image.Image
 	cl, err := decodeColor(bc)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	for i := 0; i < itr-1; i++ {
 		a := heap.Pop(mh).(*Img)
@@ -40,18 +41,24 @@ func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, c bool, bc string
 		heap.Push(mh, a.c3)
 		heap.Push(mh, a.c4)
 
-		if !ds {
-			err := saveImage(hn, fn, i, b, c, itr, cl)
+		img_out := displayImage(hn, b, c, cl)
+		imgs = append(imgs, img_out)
+
+		if s {
+			err := saveImage(img_out, fn, i, itr)
 			if err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
-	err = saveImage(hn, fn, itr, b, c, itr, cl)
+	io := displayImage(hn, b, c, cl)
+	imgs = append(imgs, io)
+
+	err = saveImage(io, fn, itr, itr)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return imgs, nil
 }
 
 func histogram(img *image.NRGBA) ([][]int, int) {
@@ -189,8 +196,7 @@ func addBorder(w int, h int, img *image.NRGBA, bor []uint8) *image.NRGBA {
 	return img
 }
 
-func saveImage(i *Img, in string, itr int, border bool, color bool, max int, colorlist []uint8) error {
-	fo := displayImage(i, border, color, colorlist)
+func saveImage(fo *image.NRGBA, in string, itr int, max int) error {
 	il, ml := len(strconv.Itoa(itr)), len(strconv.Itoa(max))
 	var num bytes.Buffer
 	for i := il; i < ml; i++ {

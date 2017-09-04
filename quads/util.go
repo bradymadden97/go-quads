@@ -4,10 +4,12 @@ package main
 import (
 	"fmt"
 	"image"
+	"image/color/palette"
+	"image/draw"
+	"image/gif"
 	"io"
 	"math"
 	"os"
-	"os/exec"
 	"strconv"
 	"strings"
 
@@ -110,11 +112,19 @@ func splitName(name string) (string, string) {
 	return strings.Join(splt[:len(splt)-1], "."), splt[len(splt)-1]
 }
 
-func toGIF(name string, frames int, pause int) error {
+func toGIF(imgs []image.Image, name string, delay int, pause int) error {
+	outGif := &gif.GIF{}
+	for _, i := range imgs {
+		inGif := image.NewPaletted(i.Bounds(), palette.Plan9)
+		draw.Draw(inGif, i.Bounds(), i, image.Point{}, draw.Src)
+		outGif.Image = append(outGif.Image, inGif)
+		outGif.Delay = append(outGif.Delay, delay)
+	}
 	n, _ := splitName(name)
-	cmd := exec.Command("python", "gif.py", "-n", n, "-f", strconv.Itoa(frames), "-p", strconv.Itoa(pause))
-	if err := cmd.Run(); err != nil {
+	f, err := os.OpenFile(outputFolder+n+".gif", os.O_WRONLY|os.O_CREATE, 0600)
+	if err != nil {
 		return err
 	}
-	return nil
+	defer f.Close()
+	return gif.EncodeAll(f, outGif)
 }

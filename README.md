@@ -20,10 +20,10 @@ Pixel art using quad trees in Go. Inspired by https://github.com/fogleman/Quads.
 
 ` -c ` : Modify quads to circles
 
-` -ds ` : Don't save intermediate images
+` -s ` : Save intermediate images
 
 ` -g ` : Flag to create gif of quad images
 
-` -gf <frames> ` : Number of images per second in gif - default 20
+` -gd <delay> ` : Delay time per gif frame in 100th of a second - default 5
 
 ` -gp <pause> ` : Number of seconds to pause at end of gif - default 2
