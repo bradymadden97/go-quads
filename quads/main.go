@@ -43,7 +43,7 @@ func main() {
 	mh[0] = headNode
 	heap.Init(&mh)
 
-	imgs, err_itr := iterate(&mh, headNode, *flags.i, *flags.f, *flags.b, *flags.c, *flags.bc, *flags.s)
+	imgs, err_itr := iterate(&mh, headNode, *flags.i, *flags.f, *flags.b, *flags.c, *flags.bc, *flags.s, *flags.g)
 	if err_itr != nil {
 		log.Fatal(err_itr)
 	}

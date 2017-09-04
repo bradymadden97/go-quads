@@ -26,8 +26,8 @@ func initialize(fn string) (*Img, error) {
 	return &headNode, nil
 }
 
-func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, c bool, bc string, s bool) ([]image.Image, error) {
-	var imgs []image.Image
+func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, c bool, bc string, s bool, g bool) ([]image.Image, error) {
+	imgs := make([]image.Image, itr)
 	cl, err := decodeColor(bc)
 	if err != nil {
 		return nil, err
@@ -45,13 +45,16 @@ func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, c bool, bc string
 		heap.Push(mh, a.c3)
 		heap.Push(mh, a.c4)
 
-		img_out := displayImage(hn, b, c, cl)
-		imgs = append(imgs, img_out)
-
-		if s {
-			err := saveImage(img_out, fn, i, itr)
-			if err != nil {
-				return nil, err
+		if g || s {
+			img_out := displayImage(hn, b, c, cl)
+			if g {
+				imgs = append(imgs, img_out)
+			}
+			if s {
+				err := saveImage(img_out, fn, i, itr)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 	}
