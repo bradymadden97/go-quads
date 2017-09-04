@@ -4,7 +4,10 @@ package main
 import (
 	"container/heap"
 	"log"
+	"os"
 )
+
+const outputFolder string = "./out/"
 
 type Img struct {
 	hist   [][]int   //Histogram of image stored as [R, G, B]
@@ -23,6 +26,12 @@ func main() {
 	flags := initializeFlags()
 	if *flags.f == "" {
 		log.Fatal(" -f <input image> required")
+	}
+
+	if _, err := os.Stat(outputFolder); os.IsNotExist(err) {
+		if err := os.Mkdir(outputFolder, os.ModeDir); err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	headNode, err := initialize(*flags.f)

@@ -20,7 +20,7 @@ type Flags struct {
 func initializeFlags() *Flags {
 	flags := Flags{
 		f:  flag.String("f", "", "Input image name"),
-		i:  flag.Int("i", 20, "Number of quad iterations to perform"),
+		i:  flag.Int("i", 200, "Number of quad iterations to perform"),
 		b:  flag.Bool("b", false, "Adds 1px black border to quads"),
 		bc: flag.String("bc", "0,0,0", "Border/ background color between quads"),
 		g:  flag.Bool("g", false, "Convert the intermediate images to a GIF"),
