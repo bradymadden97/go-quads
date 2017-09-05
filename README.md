@@ -10,13 +10,13 @@ Pixel art using quad trees in Go. Inspired by https://github.com/fogleman/Quads.
 
 
 ## Usage
-` -f <filename> ` : Input image filename
+` -f $filename ` : Input image filename
 
-` -i <iterations> ` : Number of iterations to run quads - default 200
+` -i $iterations ` : Number of iterations to run quads - default 200
 
 ` -b ` : Add borders to subimages
 
-` -bc <R,G,B> ` : Border/ background color between subimages - default 0,0,0
+` -bc $R,$G,$B ` : Border/ background color between subimages - default 0,0,0
 
 ` -c ` : Modify quads to circles
 
@@ -24,6 +24,6 @@ Pixel art using quad trees in Go. Inspired by https://github.com/fogleman/Quads.
 
 ` -g ` : Flag to create gif of quad images
 
-` -gd <delay> ` : Delay time per gif frame in 100th of a second - default 5
+` -gd $delay ` : Delay time per gif frame in 100th of a second - default 5
 
-` -gp <pause> ` : Number of seconds to pause at end of gif - default 2
+` -gp $pause ` : Number of seconds to pause at end of gif - default 2
