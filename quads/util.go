@@ -113,9 +113,9 @@ func splitName(name string) (string, string) {
 }
 
 //Referenced https://github.com/esimov/stackblur-go/blob/master/cmd/main.go
-func toGIF(imgs []image.Image, name string, delay int, pause int) error {
+func toGIF(imgs *[]image.Image, name string, delay int, pause int) error {
 	outGif := &gif.GIF{}
-	for _, i := range imgs {
+	for _, i := range *imgs {
 		inGif := image.NewPaletted(i.Bounds(), palette.Plan9)
 		draw.Draw(inGif, i.Bounds(), i, image.Point{}, draw.Src)
 		outGif.Image = append(outGif.Image, inGif)

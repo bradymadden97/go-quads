@@ -4,6 +4,7 @@ package main
 import (
 	"bytes"
 	"container/heap"
+	"fmt"
 	"image"
 	"image/color"
 	"math"
@@ -20,13 +21,14 @@ func initialize(fn string) (*Img, error) {
 	headNode := Img{
 		width:  img.Bounds().Max.X,
 		height: img.Bounds().Max.Y,
+		point:  image.Point{0, 0},
 	}
 	headNode.hist, headNode.pix = histogram(img)
 	headNode.color, headNode.error = analyzeImage(&headNode)
 	return &headNode, nil
 }
 
-func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, c bool, bc string, s bool, g bool) ([]image.Image, error) {
+func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, c bool, bc string, s bool, g bool) (*[]image.Image, error) {
 	imgs := make([]image.Image, itr)
 	cl, err := decodeColor(bc)
 	if err != nil {
@@ -38,7 +40,7 @@ func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, c bool, bc string
 			heap.Push(mh, a)
 			break
 		}
-		a.c1, a.c2, a.c3, a.c4 = splitHistogram(a.hist, a.width, a.height)
+		a.c1, a.c2, a.c3, a.c4 = splitHistogram(a.hist, a.width, a.height, a.point)
 
 		heap.Push(mh, a.c1)
 		heap.Push(mh, a.c2)
@@ -57,6 +59,7 @@ func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, c bool, bc string
 				}
 			}
 		}
+		fmt.Println(i)
 	}
 	io := displayImage(hn, b, c, cl)
 	imgs = append(imgs, io)
@@ -65,7 +68,7 @@ func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, c bool, bc string
 	if err != nil {
 		return nil, err
 	}
-	return imgs, nil
+	return &imgs, nil
 }
 
 func histogram(img *image.NRGBA) ([][]int, int) {
@@ -118,31 +121,37 @@ func calculateError(hist [][]int, avg []float64) float64 {
 	return (re + ge + be)
 }
 
-func splitHistogram(h [][]int, w int, l int) (*Img, *Img, *Img, *Img) {
+func splitHistogram(h [][]int, w int, l int, p image.Point) (*Img, *Img, *Img, *Img) {
 	c1, c2, c3, c4 := make([][]int, 0), make([][]int, 0), make([][]int, 0), make([][]int, 0)
+	p1, p2, p3, p4 := p, p, p, p
 	for i := 0; i < len(h); i++ {
 		if i < int(l/2)*w {
 			if i%w < w/2 {
 				c1 = append(c1, h[i])
 			} else {
 				c2 = append(c2, h[i])
+				p2.X += w / 2
 			}
 		} else {
 			if i%w < w/2 {
 				c3 = append(c3, h[i])
+				p3.Y += h / 2
 			} else {
 				c4 = append(c4, h[i])
+				p4.X += w / 2
+				p4.Y += h / 2
 			}
 		}
 	}
-	return newNode(c1, w, l), newNode(c2, w, l), newNode(c3, w, l), newNode(c4, w, l)
+	return newNode(c1, w, l, p1), newNode(c2, w, l, p2), newNode(c3, w, l, p3), newNode(c4, w, l, p4)
 }
 
-func newNode(hist [][]int, w int, h int) *Img {
+func newNode(hist [][]int, w int, h int, p image.Point) *Img {
 	newNode := Img{
 		width:  int(w / 2),
 		height: int(h / 2),
 		hist:   hist,
+		point:  p,
 	}
 	newNode.pix = newNode.width * newNode.height
 	newNode.color, newNode.error = analyzeImage(&newNode)
