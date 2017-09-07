@@ -167,6 +167,21 @@ func displayImage(head *Img, border bool, circle bool, colorlist []uint8) *image
 	return traverseTree(canvas, head, image.Point{0, 0}, border, circle, colorlist)
 }
 
+func updateImage(img *image.NRGBA, sub_imgs []*Img, border bool, circle bool, colorlist []uint8) *image.NRGBA {
+	for _, i := range sub_imgs {
+		c := color.RGBA{uint8(i.color[0]), uint8(i.color[1]), uint8(i.color[2]), 255}
+		a := imaging.New(i.width, i.height, c)
+		if border {
+			a = addBorder(i.width, i.height, a, colorlist)
+		}
+		if circle {
+			a = addCircle(i.width, i.height, a, colorlist)
+		}
+		img = imaging.Paste(img, a, i.point)
+	}
+	return img
+}
+
 func traverseTree(canvas *image.NRGBA, node *Img, p image.Point, border bool, circle bool, colorlist []uint8) *image.NRGBA {
 	if node.c1 == nil && node.c2 == nil && node.c3 == nil && node.c4 == nil {
 		c := color.RGBA{uint8(node.color[0]), uint8(node.color[1]), uint8(node.color[2]), 255}
