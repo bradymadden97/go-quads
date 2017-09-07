@@ -29,13 +29,20 @@ func initialize(fn string) (*Img, error) {
 }
 
 func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, c bool, bc string, s bool, g bool) ([]*image.NRGBA, error) {
-	imgs := make([]*image.NRGBA, itr)
 	cl, err := decodeColor(bc)
 	if err != nil {
 		return nil, err
 	}
-	imgs = append(imgs, displayImage(hn, b, c, cl))
+	past_img := displayImage(hn, b, c, cl)
+
 	for i := 0; i < itr; i++ {
+		if s {
+			err := saveImage(past_img, fn, i, itr)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		a := heap.Pop(mh).(*Img)
 		if a.width <= 1 || a.height <= 1 {
 			heap.Push(mh, a)
@@ -48,23 +55,15 @@ func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, c bool, bc string
 		heap.Push(mh, a.c3)
 		heap.Push(mh, a.c4)
 
-		fmt.Printf("%v %v %v %v", a.c1.point, a.c2.point, a.c3.point, a.c4.point)
+		past_img = updateImage(past_img, []*Img{a.c1, a.c2, a.c3, a.c4}, b, c, cl)
 
-		img_out := updateImage(imgs[i], []*Img{a.c1, a.c2, a.c3, a.c4}, b, c, cl)
-		imgs = append(imgs, img_out)
-		if s {
-			err := saveImage(img_out, fn, i, itr)
-			if err != nil {
-				return nil, err
-			}
-		}
 		fmt.Println(i)
 	}
-	err = saveImage(imgs[itr], fn, itr, itr)
+	err = saveImage(past_img, fn, itr, itr)
 	if err != nil {
 		return nil, err
 	}
-	return imgs, nil
+	return nil, nil
 }
 
 func histogram(img *image.NRGBA) ([][]int, int) {
