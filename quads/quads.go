@@ -28,13 +28,14 @@ func initialize(fn string) (*Img, error) {
 	return &headNode, nil
 }
 
-func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, c bool, bc string, s bool, g bool) (*[]image.Image, error) {
-	imgs := make([]image.Image, itr)
+func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, c bool, bc string, s bool, g bool) ([]*image.NRGBA, error) {
+	imgs := make([]*image.NRGBA, itr)
 	cl, err := decodeColor(bc)
 	if err != nil {
 		return nil, err
 	}
-	for i := 0; i < itr-1; i++ {
+	imgs = append(imgs, displayImage(hn, b, c, cl))
+	for i := 0; i < itr; i++ {
 		a := heap.Pop(mh).(*Img)
 		if a.width <= 1 || a.height <= 1 {
 			heap.Push(mh, a)
@@ -47,28 +48,23 @@ func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, c bool, bc string
 		heap.Push(mh, a.c3)
 		heap.Push(mh, a.c4)
 
-		if g || s {
-			img_out := displayImage(hn, b, c, cl)
-			if g {
-				imgs = append(imgs, img_out)
-			}
-			if s {
-				err := saveImage(img_out, fn, i, itr)
-				if err != nil {
-					return nil, err
-				}
+		fmt.Printf("%v %v %v %v", a.c1.point, a.c2.point, a.c3.point, a.c4.point)
+
+		img_out := updateImage(imgs[i], []*Img{a.c1, a.c2, a.c3, a.c4}, b, c, cl)
+		imgs = append(imgs, img_out)
+		if s {
+			err := saveImage(img_out, fn, i, itr)
+			if err != nil {
+				return nil, err
 			}
 		}
 		fmt.Println(i)
 	}
-	io := displayImage(hn, b, c, cl)
-	imgs = append(imgs, io)
-
-	err = saveImage(io, fn, itr, itr)
+	err = saveImage(imgs[itr], fn, itr, itr)
 	if err != nil {
 		return nil, err
 	}
-	return &imgs, nil
+	return imgs, nil
 }
 
 func histogram(img *image.NRGBA) ([][]int, int) {
@@ -123,23 +119,19 @@ func calculateError(hist [][]int, avg []float64) float64 {
 
 func splitHistogram(h [][]int, w int, l int, p image.Point) (*Img, *Img, *Img, *Img) {
 	c1, c2, c3, c4 := make([][]int, 0), make([][]int, 0), make([][]int, 0), make([][]int, 0)
-	p1, p2, p3, p4 := p, p, p, p
+	p1, p2, p3, p4 := image.Point{p.X, p.Y}, image.Point{p.X + w/2, p.Y}, image.Point{p.X, p.Y + l/2}, image.Point{p.X + w/2, p.Y + l/2}
 	for i := 0; i < len(h); i++ {
 		if i < int(l/2)*w {
 			if i%w < w/2 {
 				c1 = append(c1, h[i])
 			} else {
 				c2 = append(c2, h[i])
-				p2.X += w / 2
 			}
 		} else {
 			if i%w < w/2 {
 				c3 = append(c3, h[i])
-				p3.Y += h / 2
 			} else {
 				c4 = append(c4, h[i])
-				p4.X += w / 2
-				p4.Y += h / 2
 			}
 		}
 	}
@@ -177,6 +169,7 @@ func updateImage(img *image.NRGBA, sub_imgs []*Img, border bool, circle bool, co
 		if circle {
 			a = addCircle(i.width, i.height, a, colorlist)
 		}
+
 		img = imaging.Paste(img, a, i.point)
 	}
 	return img
