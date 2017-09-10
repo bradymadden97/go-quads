@@ -150,10 +150,10 @@ func createImage(head *Img, border bool, circle bool, colorlist []uint8) *image.
 	base := color.RGBA{uint8(head.color[0]), uint8(head.color[1]), uint8(head.color[2]), 255}
 	canvas := imaging.New(head.width, head.height, base)
 	if border {
-		canvas = addBorder(head.width, head.height, canvas, colorlist)
+		canvas = addBorder(canvas, head.width, head.height, head.point, colorlist)
 	}
 	if circle {
-		canvas = addCircle(head.width, head.height, canvas, colorlist)
+		canvas = addCircle(canvas, head.width, head.height, head.point, colorlist)
 	}
 
 	return canvas
@@ -164,10 +164,10 @@ func updateImage(img *image.NRGBA, sub_imgs []*Img, border bool, circle bool, co
 		c := []uint8{uint8(i.color[0]), uint8(i.color[1]), uint8(i.color[2]), 255}
 		new_img := pasteImage(img, i.width, i.height, i.point, c)
 		if border {
-			new_img = addBorder(i.width, i.height, new_img, colorlist)
+			new_img = addBorder(new_img, i.width, i.height, i.point, colorlist)
 		}
 		if circle {
-			new_img = addCircle(i.width, i.height, new_img, colorlist)
+			new_img = addCircle(new_img, i.width, i.height, i.point, colorlist)
 		}
 	}
 	return img
@@ -195,10 +195,10 @@ func saveImage(fo *image.NRGBA, in string, itr int, max int) error {
 	return nil
 }
 
-func addCircle(w int, h int, img *image.NRGBA, cl []uint8) *image.NRGBA {
-	for y := 0; y < h; y++ {
-		for x := 0; x < w; x++ {
-			if euclideanDistance(w/2, x, h/2, y) >= ovalRadius(w/2, h/2, getAngle(w, h, x, y)) {
+func addCircle(img *image.NRGBA, w int, h int, point image.Point, cl []uint8) *image.NRGBA {
+	for y := point.Y; y < point.Y+h; y++ {
+		for x := point.X; x < point.X+w; x++ {
+			if euclideanDistance(w/2, x-point.X, h/2, y-point.Y) >= ovalRadius(w/2, h/2, getAngle(w, h, x-point.X, y-point.Y)) {
 				copy(img.Pix[x*4+y*img.Stride:(x+1)*4+y*img.Stride], cl)
 			}
 		}
@@ -206,16 +206,14 @@ func addCircle(w int, h int, img *image.NRGBA, cl []uint8) *image.NRGBA {
 	return img
 }
 
-func addBorder(w int, h int, img *image.NRGBA, bor []uint8) *image.NRGBA {
-	for x := 0; x < w; x++ {
-		copy(img.Pix[x*4:(x+1)*4], bor)
-		copy(img.Pix[x*4+(h-1)*img.Stride:(x+1)*4+(h-1)*img.Stride], bor)
+func addBorder(img *image.NRGBA, w int, h int, point image.Point, bor []uint8) *image.NRGBA {
+	for x := point.X; x < point.X+w; x++ {
+		copy(img.Pix[point.Y*img.Stride+x*4:point.Y*img.Stride+(x+1)*4], bor)
+		copy(img.Pix[(point.Y+(h-1))*img.Stride+x*4:(point.Y+(h-1))*img.Stride+(x+1)*4], bor)
 	}
-
-	for y := 1; y < h-1; y++ {
-		copy(img.Pix[y*img.Stride:y*img.Stride+4], bor)
-		copy(img.Pix[y*img.Stride+w*4-4:y*img.Stride+w*4], bor)
+	for y := point.Y + 1; y < point.Y+h-1; y++ {
+		copy(img.Pix[y*img.Stride+point.X*4:y*img.Stride+4+point.X*4], bor)
+		copy(img.Pix[y*img.Stride+w*4-4+point.X*4:y*img.Stride+w*4+point.X*4], bor)
 	}
-
 	return img
 }
