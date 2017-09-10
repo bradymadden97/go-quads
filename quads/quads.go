@@ -4,7 +4,6 @@ package main
 import (
 	"bytes"
 	"container/heap"
-	"fmt"
 	"image"
 	"image/color"
 	"math"
@@ -33,7 +32,7 @@ func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, c bool, bc string
 	if err != nil {
 		return nil, err
 	}
-	past_img := displayImage(hn, b, c, cl)
+	past_img := createImage(hn, b, c, cl)
 
 	for i := 0; i < itr; i++ {
 		if s {
@@ -56,8 +55,6 @@ func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, c bool, bc string
 		heap.Push(mh, a.c4)
 
 		past_img = updateImage(past_img, []*Img{a.c1, a.c2, a.c3, a.c4}, b, c, cl)
-
-		fmt.Println(i)
 	}
 	err = saveImage(past_img, fn, itr, itr)
 	if err != nil {
@@ -149,49 +146,53 @@ func newNode(hist [][]int, w int, h int, p image.Point) *Img {
 	return &newNode
 }
 
-func displayImage(head *Img, border bool, circle bool, colorlist []uint8) *image.NRGBA {
+func createImage(head *Img, border bool, circle bool, colorlist []uint8) *image.NRGBA {
 	base := color.RGBA{uint8(head.color[0]), uint8(head.color[1]), uint8(head.color[2]), 255}
 	canvas := imaging.New(head.width, head.height, base)
 	if border {
 		canvas = addBorder(head.width, head.height, canvas, colorlist)
 	}
-	return traverseTree(canvas, head, image.Point{0, 0}, border, circle, colorlist)
+	if circle {
+		canvas = addCircle(head.width, head.height, canvas, colorlist)
+	}
+
+	return canvas
 }
 
 func updateImage(img *image.NRGBA, sub_imgs []*Img, border bool, circle bool, colorlist []uint8) *image.NRGBA {
 	for _, i := range sub_imgs {
-		c := color.RGBA{uint8(i.color[0]), uint8(i.color[1]), uint8(i.color[2]), 255}
-		a := imaging.New(i.width, i.height, c)
+		c := []uint8{uint8(i.color[0]), uint8(i.color[1]), uint8(i.color[2]), 255}
+		new_img := pasteImage(img, i.width, i.height, i.point, c)
 		if border {
-			a = addBorder(i.width, i.height, a, colorlist)
+			new_img = addBorder(i.width, i.height, new_img, colorlist)
 		}
 		if circle {
-			a = addCircle(i.width, i.height, a, colorlist)
+			new_img = addCircle(i.width, i.height, new_img, colorlist)
 		}
-
-		img = imaging.Paste(img, a, i.point)
 	}
 	return img
 }
 
-func traverseTree(canvas *image.NRGBA, node *Img, p image.Point, border bool, circle bool, colorlist []uint8) *image.NRGBA {
-	if node.c1 == nil && node.c2 == nil && node.c3 == nil && node.c4 == nil {
-		c := color.RGBA{uint8(node.color[0]), uint8(node.color[1]), uint8(node.color[2]), 255}
-		a := imaging.New(node.width, node.height, c)
-		if border {
-			a = addBorder(node.width, node.height, a, colorlist)
+func pasteImage(bg *image.NRGBA, w int, h int, point image.Point, c []uint8) *image.NRGBA {
+	for i := point.Y; i < point.Y+h; i++ {
+		for j := point.X; j < point.X+w; j++ {
+			copy(bg.Pix[i*bg.Stride+j*4:i*bg.Stride+(j+1)*4], c)
 		}
-		if circle {
-			a = addCircle(node.width, node.height, a, colorlist)
-		}
-		canvas = imaging.Paste(canvas, a, p)
-	} else {
-		canvas = traverseTree(canvas, node.c1, p, border, circle, colorlist)
-		canvas = traverseTree(canvas, node.c2, image.Point{p.X + int(node.width/2), p.Y}, border, circle, colorlist)
-		canvas = traverseTree(canvas, node.c3, image.Point{p.X, p.Y + int(node.height/2)}, border, circle, colorlist)
-		canvas = traverseTree(canvas, node.c4, image.Point{p.X + int(node.width/2), p.Y + int(node.height/2)}, border, circle, colorlist)
 	}
-	return canvas
+	return bg
+}
+
+func saveImage(fo *image.NRGBA, in string, itr int, max int) error {
+	il, ml := len(strconv.Itoa(itr)), len(strconv.Itoa(max))
+	var num bytes.Buffer
+	for i := il; i < ml; i++ {
+		num.WriteString("0")
+	}
+	num.WriteString(strconv.Itoa(itr))
+	n := concatName(in, num.String())
+	imaging.Save(fo, outputFolder+n)
+
+	return nil
 }
 
 func addCircle(w int, h int, img *image.NRGBA, cl []uint8) *image.NRGBA {
@@ -217,17 +218,4 @@ func addBorder(w int, h int, img *image.NRGBA, bor []uint8) *image.NRGBA {
 	}
 
 	return img
-}
-
-func saveImage(fo *image.NRGBA, in string, itr int, max int) error {
-	il, ml := len(strconv.Itoa(itr)), len(strconv.Itoa(max))
-	var num bytes.Buffer
-	for i := il; i < ml; i++ {
-		num.WriteString("0")
-	}
-	num.WriteString(strconv.Itoa(itr))
-	n := concatName(in, num.String())
-	imaging.Save(fo, outputFolder+n)
-
-	return nil
 }
