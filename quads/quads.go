@@ -27,7 +27,8 @@ func initialize(fn string) (*Img, error) {
 	return &headNode, nil
 }
 
-func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, c bool, bc string, s bool, g bool) ([]*image.NRGBA, error) {
+func iterate(mh *MinHeap, hn *Img, itr int, fn string, b bool, c bool, bc string, s bool, g bool) ([]image.Image, error) {
+	//imgs := make([]image.Image, itr)
 	cl, err := decodeColor(bc)
 	if err != nil {
 		return nil, err

@@ -17,7 +17,7 @@ type Img struct {
 	error  float64     //Calculated error between average pixels and image
 	width  int         //Picture width
 	height int         //Picture height
-	point  image.Point //Upper-left point of image/ subimage
+	point  image.Point //Upper-left point of image
 	c1     *Img        //Pointer to child 1
 	c2     *Img        //Pointer to child 2
 	c3     *Img        //Pointer to child 3
@@ -50,7 +50,7 @@ func main() {
 		log.Fatal(err_itr)
 	}
 
-	if *flags.g {
+	if *flags.g && imgs != nil {
 		err = toGIF(imgs, *flags.f, *flags.gd, *flags.gp)
 		if err != nil {
 			log.Fatal(err)
