@@ -22,6 +22,8 @@ Pixel art using quad trees in Go. Inspired by https://github.com/fogleman/Quads.
 
 ` -s ` : Save intermediate images
 
+#### GIF still work in progress
+
 ` -g ` : Flag to create gif of quad images
 
 ` -gd $delay ` : Delay time per gif frame in 100th of a second - default 5
