@@ -87,18 +87,20 @@ func ovalRadius(a int, b int, theta float64) float64 {
 
 func decodeColor(bc string) ([]uint8, error) {
 	l := strings.Split(bc, ",")
-	if len(l) != 3 {
-		return nil, fmt.Errorf("Error: backgroundcolor length %d not = 3", len(l))
+	if len(l) < 3 || len(l) > 4 {
+		return nil, fmt.Errorf("Error: backgroundcolor length %d not 3 or 4", len(l))
 	}
 	cl := make([]uint8, 4)
-	for i := 0; i < 3; i++ {
+	for i := 0; i < len(l); i++ {
 		s, err := strconv.ParseUint(l[i], 10, 64)
 		if err != nil || s < 0 || s > 255 {
 			return nil, err
 		}
 		cl[i] = uint8(s)
 	}
-	cl[3] = 255
+	if len(l) == 3 {
+		cl[3] = 255
+	}
 	return cl, nil
 }
 

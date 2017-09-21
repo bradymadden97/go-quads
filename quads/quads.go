@@ -77,8 +77,9 @@ func histogram(img *image.NRGBA) ([][]int, int) {
 			r := int(img.Pix[loc])
 			g := int(img.Pix[loc+1])
 			b := int(img.Pix[loc+2])
+			o := int(img.Pix[loc+3])
 
-			i := []int{r, g, b}
+			i := []int{r, g, b, o}
 			hist[y*w+x] = i
 		}
 	}
@@ -92,14 +93,15 @@ func analyzeImage(i *Img) ([]float64, float64) {
 }
 
 func averageRGB(hist [][]int, p int) []float64 {
-	r, g, b := 0, 0, 0
+	r, g, b, o := 0, 0, 0, 0
 	for i := 0; i < p; i++ {
 		r += hist[i][0]
 		g += hist[i][1]
 		b += hist[i][2]
+		o += hist[i][3]
 	}
 	pix := float64(p)
-	avg := []float64{float64(r) / pix, float64(g) / pix, float64(b) / pix}
+	avg := []float64{float64(r) / pix, float64(g) / pix, float64(b) / pix, float64(o) / pix}
 	return avg
 }
 
@@ -148,7 +150,7 @@ func newNode(hist [][]int, w int, h int, p image.Point) *Img {
 }
 
 func createImage(head *Img, border bool, circle bool, colorlist []uint8) *image.NRGBA {
-	base := color.RGBA{uint8(head.color[0]), uint8(head.color[1]), uint8(head.color[2]), 255}
+	base := color.RGBA{uint8(head.color[0]), uint8(head.color[1]), uint8(head.color[2]), uint8(head.color[3])}
 	canvas := imaging.New(head.width, head.height, base)
 	if border {
 		canvas = addBorder(canvas, head.width, head.height, head.point, colorlist)
@@ -162,7 +164,7 @@ func createImage(head *Img, border bool, circle bool, colorlist []uint8) *image.
 
 func updateImage(img *image.NRGBA, sub_imgs []*Img, border bool, circle bool, colorlist []uint8) *image.NRGBA {
 	for _, i := range sub_imgs {
-		c := []uint8{uint8(i.color[0]), uint8(i.color[1]), uint8(i.color[2]), 255}
+		c := []uint8{uint8(i.color[0]), uint8(i.color[1]), uint8(i.color[2]), uint8(i.color[3])}
 		new_img := pasteImage(img, i.width, i.height, i.point, c)
 		if border {
 			new_img = addBorder(new_img, i.width, i.height, i.point, colorlist)
