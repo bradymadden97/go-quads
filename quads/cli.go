@@ -22,7 +22,7 @@ func initializeFlags() *Flags {
 		f:  flag.String("f", "", "Input image name"),
 		i:  flag.Int("i", 200, "Number of quad iterations to perform"),
 		b:  flag.Bool("b", false, "Adds 1px black border to quads"),
-		bc: flag.String("bc", "0,0,0", "Border/ background color between quads"),
+		bc: flag.String("bc", "0,0,0,255", "Border/ background color between quads"),
 		g:  flag.Bool("g", false, "Convert the intermediate images to a GIF"),
 		gd: flag.Int("gd", 5, "Delay per frame in GIF in 100th of a second"),
 		gp: flag.Int("gp", 2, "Pause in seconds at end of GIF loop"),
