@@ -29,3 +29,5 @@ Pixel art using quad trees in Go. Inspired by https://github.com/fogleman/Quads.
 ` -gd $delay ` : Delay time per gif frame in 100th of a second - default 5
 
 ` -gp $pause ` : Number of seconds to pause at end of gif - default 2
+
+This is a test
