@@ -30,4 +30,4 @@ Pixel art using quad trees in Go. Inspired by https://github.com/fogleman/Quads.
 
 ` -gp $pause ` : Number of seconds to pause at end of gif - default 2
 
-This is a test
+This is a test, again
